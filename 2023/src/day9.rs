@@ -1,4 +1,3 @@
-
 use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::*;
@@ -12,52 +11,40 @@ fn part1 () {
     let file = File::open("input").unwrap();
     let buf_reader = BufReader::new(file);
 
-    let lines = buf_reader.lines().map(|line| {
+    let sum: isize = buf_reader.lines().map(|line| {
         let string = line.expect("expected");
-        let significant = string.split(':').skip(1).next().unwrap();
-        let nums: Vec<&str> = significant.split(' ').collect();
-        nums.iter().filter_map(|x| x.trim().parse().ok()).collect::<Vec<usize>>()
-    }).collect::<Vec<Vec<usize>>>();
-    let times = &lines[0];
-    let dists = &lines[1];
-    let mut delta = 0;
-    let product: usize = (0..times.len()).map(|i| {
-        let time = &times[i];
-        let dist = &dists[i];
-        let first: usize = (1..*time).find(|x: &usize| ((*time - x) * x) > *dist).unwrap_or(0);
-        let last: usize = (1..*time).rfind(|x: &usize| ((*time - x) * x) > *dist).unwrap_or(*time);
-        delta = last - first + 1;
-        delta
-    }).product();
-    println!("{}", product);
+        let mut nums = string.split(' ').filter_map(|str| str.parse().ok()).collect::<Vec<isize>>();
+        let mut last_nums = vec![nums[nums.len() - 1]];
+        loop {
+            if nums.iter().all(|&x| x == nums[0]) {
+                break;
+            }
+            nums = nums.windows(2).map(|slc| slc[1] - slc[0]).collect::<Vec<isize>>();
+            last_nums.push(nums[nums.len() - 1]);
+
+        }
+        last_nums.iter().sum::<isize>()
+    }).sum();
+    println!("{}", sum);
 }
 
 fn part2 () {
     let file = File::open("input").unwrap();
     let buf_reader = BufReader::new(file);
-
-    let lines = buf_reader.lines().map(|line| {
+    
+    let sum: isize = buf_reader.lines().map(|line| {
         let string = line.expect("expected");
-        let significant = string.split(':').skip(1).next().unwrap();
-        let nums: Vec<&str> = significant.split(' ').collect();
-        nums.iter().map(|x| x.trim()).filter(|x| x.parse::<usize>().is_ok()).collect::<String>()
-    }).collect::<Vec<String>>();
-    let time_string = &lines[0];
-    let dist_string = &lines[1];
-    let time: usize = time_string.parse().unwrap();
-    let dist: usize = dist_string.parse().unwrap();
-    let mut delta = 0;
-    // let product: usize = (0..times.len()).map(|i| {
-    //     // let time = &times[i];
-    //     // let dist = &dists[i];
-    //     let first: usize = (1..*time).find(|x: &usize| ((*time - x) * x) > *dist).unwrap_or(0);
-    //     let last: usize = (1..*time).rfind(|x: &usize| ((*time - x) * x) > *dist).unwrap_or(*time);
-    //     delta = last - first + 1;
-    //     delta
-    // }).product();
-    let first: usize = (1..time).find(|x: &usize| ((time - x) * x) > dist).unwrap_or(0);
-    let last: usize = (1..time).rfind(|x: &usize| ((time - x) * x) > dist).unwrap_or(time);
-    delta = last - first + 1;
-
-    println!("{}", delta);
+        let mut nums = string.split(' ').filter_map(|str| str.parse().ok()).collect::<Vec<isize>>();
+        let mut first_nums = vec![nums[0]];
+        loop {
+            if nums.iter().all(|&x| x == nums[0]) {
+                break;
+            }
+            nums = nums.windows(2).map(|slc| slc[1] - slc[0]).collect::<Vec<isize>>();
+            first_nums.push(nums[0]);
+        }
+        let res = first_nums.into_iter().enumerate().reduce(|acc, (i, x)| if i % 2 == 1 {(1, acc.1 - x)} else {(i, acc.1 + x)} ).unwrap();
+        res.1
+    }).sum();
+    println!("{}", sum);
 }
