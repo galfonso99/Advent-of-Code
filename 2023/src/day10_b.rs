@@ -1,196 +1,131 @@
+#![allow(
+    clippy::cast_possible_truncation,
+    clippy::cast_possible_wrap,
+    clippy::cast_sign_loss
+)]
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
-use std::os::windows;
 
-#[derive(Debug, Clone)]
-struct Path {
-    char: char,
-    y: usize,
-    x: usize,
-    dir: i8,
-    step: usize,
-}
 pub fn main() {
+    // part1();
     part2();
 }
 
+// Solution from someone else
 
-fn get_next_dir(char: char, dir: i8) -> i8 {
-    match char {
-        '|' => dir,
-        '-' => dir,
-        'F' if dir == -2 => -1,
-        'F' => 2,
-        'L' if dir == -2 => 1,
-        'L' => 2,
-        '7' if dir == 2 => -1,
-        '7' => -2,
-        'J' if dir == 2 => 1,
-        'J' => -2,
-        _ => dir,
+use std::ops::Index;
+
+pub fn part1(input: &str) -> u16 {
+    let grid = Grid::from_str(input).unwrap();
+    let (start_row, start_col) = grid.find(b'S').unwrap();
+    let (mut last_row, mut last_col) = grid.get_s_neighbors((start_row, start_col)).next().unwrap();
+    let (mut curr_row, mut curr_col) = (start_row, start_col);
+
+    let mut lenght = 0;
+    while !(curr_row == start_row && curr_col == start_col) || lenght == 0 {
+        let (next_row, next_col) = grid.get_neighbor((curr_row, curr_col), (last_row, last_col));
+        (last_row, last_col) = (curr_row, curr_col);
+        (curr_row, curr_col) = (next_row, next_col);
+        lenght += 1;
     }
+    lenght / 2
 }
 
-fn find_initial_paths(paths: &mut Vec<Path>, pos: &(usize, usize), chars: &mut Vec<Vec<char>>) {
-    if paths.len() < 2 && pos.0 > 0 {
-        if chars[pos.0 - 1][pos.1] == '|'
-            || chars[pos.0 - 1][pos.1] == 'F'
-            || chars[pos.0 - 1][pos.1] == '7'
-        {
-            let dir = get_next_dir(chars[pos.0 - 1][pos.1], 1);
-            paths.push(Path {
-                char: chars[pos.0 - 1][pos.1],
-                y: pos.0 - 1,
-                x: pos.1,
-                dir,
-                step: 1,
-            });
-            chars[pos.0 - 1][pos.1] = map(chars[pos.0 - 1][pos.1]);
-        }
-    }
-    if paths.len() < 2 && pos.1 + 1 < chars[pos.0].len() {
-        if chars[pos.0][pos.1 + 1] == '-'
-            || chars[pos.0][pos.1 + 1] == 'J'
-            || chars[pos.0][pos.1 + 1] == '7'
-        {
-            let dir = get_next_dir(chars[pos.0][pos.1 + 1], 2);
-            paths.push(Path {
-                char: chars[pos.0][pos.1 + 1],
-                y: pos.0,
-                x: pos.1 + 1,
-                dir,
-                step: 1,
-            });
-            chars[pos.0][pos.1 + 1] = map(chars[pos.0][pos.1 + 1]);
-        }
-    }
-    if paths.len() < 2 && pos.0 + 1 < chars.len() {
-        if chars[pos.0 + 1][pos.1] == '|'
-            || chars[pos.0 + 1][pos.1] == 'J'
-            || chars[pos.0 + 1][pos.1] == 'L'
-        {
-            let dir = get_next_dir(chars[pos.0 + 1][pos.1], -1);
-            paths.push(Path {
-                char: chars[pos.0 + 1][pos.1],
-                y: pos.0 + 1,
-                x: pos.1,
-                dir,
-                step: 1,
-            });
-            chars[pos.0 + 1][pos.1] = map(chars[pos.0 + 1][pos.1]);
-        }
-    }
-    if paths.len() < 2 && pos.1 > 0 {
-        if chars[pos.0][pos.1 - 1] == '-'
-            || chars[pos.0][pos.1 - 1] == 'F'
-            || chars[pos.0][pos.1 - 1] == 'L'
-        {
-            let dir = get_next_dir(chars[pos.0][pos.1 - 1], -2);
-            paths.push(Path {
-                char: chars[pos.0][pos.1 - 1],
-                y: pos.0,
-                x: pos.1 - 1,
-                dir,
-                step: 1,
-            });
-            chars[pos.0][pos.1 - 1] = map(chars[pos.0][pos.1 - 1]);
-        }
-    }
-}
-
-fn part2() {
-    let file = File::open("test").unwrap();
+pub fn part2() {
+    let file = File::open("input").unwrap();
     let mut buf_reader = BufReader::new(file);
     let mut input = String::new();
     buf_reader.read_to_string(&mut input).unwrap();
-    let mut chars = input
-        .lines()
-        .map(|str| str.chars().collect::<Vec<char>>())
-        .collect::<Vec<Vec<char>>>();
-    // Find animal position 'S'
-    let pos = chars.iter().enumerate()
-        .map(|(i, arr)| {
-            arr.iter()
-                .enumerate()
-                .map(move |(j, c)| if c == &'S' { Some((i, j)) } else { None })
-                .find(|x| x.is_some())
+    let grid = Grid::from_str(&input).unwrap();
+    let (start_row, start_col) = grid.find(b'S').unwrap();
+    let (mut last_row, mut last_col) = grid.get_s_neighbors((start_row, start_col)).next().unwrap();
+    let (mut curr_row, mut curr_col) = (start_row, start_col);
+
+    let mut lenght = 0;
+    let mut twice_area = 0;
+    while !(curr_row == start_row && curr_col == start_col) || lenght == 0 {
+        let (next_row, next_col) = grid.get_neighbor((curr_row, curr_col), (last_row, last_col));
+        (last_row, last_col) = (curr_row, curr_col);
+        (curr_row, curr_col) = (next_row, next_col);
+        lenght += 1;
+        twice_area += (last_col + curr_col) * (last_row - curr_row);
+    }
+    let res = (twice_area.abs() - lenght) / 2 + 1;
+    println!("{}", res);
+}
+
+struct Grid<'a> {
+    inner: &'a [u8],
+    modulo: i16,
+    col_len: i16,
+}
+
+impl<'a> Grid<'a> {
+    fn from_str(input: &'a str) -> Option<Self> {
+        Some(Self {
+            inner: input.as_bytes(),
+            modulo: input.find('\n')? as i16 + 1,
+            col_len: input.lines().count() as i16,
         })
-        .flatten().next().unwrap().unwrap();
-
-    let first_tile = Path {char: 'S', y: pos.0, x: pos.1, dir: 3, step: 0};
-    let mut paths: Vec<Path> = vec![first_tile];
-    find_initial_paths(&mut paths, &pos, &mut chars);
-
-    let mut next_path = paths[1].clone();
-    while next_path.char != 'S' {
-        next_path = get_next_step_2(&next_path, &mut chars, &mut paths);
     }
-    let len = paths.len();
-    let twice_area = get_area(&mut paths);
-    let inside_points = get_inside_points(twice_area, paths.len() - 1);
-    println!("{}", inside_points);
-}
 
-fn get_area(paths: &mut Vec<Path>) -> isize {
-    let sum: isize = paths.windows(2).map(|sl| (sl[1].y as isize * sl[0].x as isize) - (sl[1].x * sl[0].y) as isize).sum(); 
-    let area = sum.abs();
-    area
-}
-fn get_inside_points(twice_area: isize, len: usize) -> isize {
-    let inside = (twice_area - len as isize) / 2 + 1;
-    inside
-}
-fn get_next_step_2(path: &Path, chars: &mut Vec<Vec<char>>, paths: &mut Vec<Path>) -> Path {
-    match path.dir {
-        1 => {
-            let dir = get_next_dir(chars[path.y - 1][path.x], path.dir);
-            paths.push( Path { char: chars[path.y - 1][path.x], y: path.y - 1, x: path.x, dir, step: path.step + 1, });
-            // chars[path.y][path.x] = map(chars[path.y][path.x]);
-            Path { char: chars[path.y - 1][path.x], y: path.y - 1, x: path.x, dir, step: path.step + 1, }
-        }
-        -1 => {
-            let dir = get_next_dir(chars[path.y + 1][path.x], path.dir);
-            paths.push(Path { char: chars[path.y + 1][path.x], y: path.y + 1, x: path.x, dir, step: path.step + 1 });
-            // chars[path.y][path.x] = map(chars[path.y][path.x]);
-            Path { char: chars[path.y + 1][path.x], y: path.y + 1, x: path.x, dir, step: path.step + 1 }
-        }
-        2 => {
-            let dir = get_next_dir(chars[path.y][path.x + 1], path.dir);
-            paths.push(Path { char: chars[path.y][path.x + 1], y: path.y, x: path.x + 1, dir, step: path.step + 1, });
-            // chars[path.y][path.x] = map(chars[path.y][path.x]);
-            Path { char: chars[path.y][path.x + 1], y: path.y, x: path.x + 1, dir, step: path.step + 1, }
-        }
-        -2 => {
-            let dir = get_next_dir(chars[path.y][path.x - 1], path.dir);
-            paths.push(Path { char: chars[path.y][path.x - 1], y: path.y, x: path.x - 1, dir, step: path.step + 1, });
-            // chars[path.y][path.x] = map(chars[path.y][path.x]);
-            Path { char: chars[path.y][path.x - 1], y: path.y, x: path.x - 1, dir, step: path.step + 1, }
-        }
-        _ => {
-            paths.push(Path { char: chars[path.y - 1][path.x], y: path.y - 1, x: path.x, dir: 1, step: path.step + 1, });
-            // chars[path.y][path.x] = map(chars[path.y][path.x]);
-            Path { char: chars[path.y - 1][path.x], y: path.y - 1, x: path.x, dir: 1, step: path.step + 1, }
+    fn find(&self, haystack: u8) -> Option<(i16, i16)> {
+        let idx = self.inner.iter().position(|&pipe| pipe == haystack)? as i16;
+        let row = idx / self.modulo;
+        let col = idx % self.modulo;
+        Some((row, col))
+    }
+
+    fn get_s_neighbors(
+        &self,
+        (curr_row, curr_col): (i16, i16),
+    ) -> impl Iterator<Item = (i16, i16)> + '_ {
+        [(-1, 0), (0, -1), (1, 0), (0, 1)]
+            .into_iter()
+            .filter(move |&(d_row, d_col)| {
+                curr_row + d_row >= 0
+                    && curr_row + d_row < self.col_len
+                    && curr_col + d_col >= 0
+                    && curr_col + d_col < self.modulo - 1
+            })
+            .map(move |(d_row, d_col)| ((d_row, d_col), self[(curr_row + d_row, curr_col + d_col)]))
+            .filter(|neighbor| {
+                matches!(
+                    neighbor,
+                    ((-1, 0), b'|' | b'7' | b'F')
+                        | ((0, -1), b'-' | b'L' | b'F')
+                        | ((1, 0), b'|' | b'L' | b'J')
+                        | ((0, 1), b'-' | b'J' | b'7')
+                )
+            })
+            .map(move |((d_row, d_col), _)| (curr_row + d_row, curr_col + d_col))
+    }
+
+    fn get_neighbor(
+        &self,
+        (curr_row, curr_col): (i16, i16),
+        (last_row, last_col): (i16, i16),
+    ) -> (i16, i16) {
+        let last_d_row = last_row - curr_row;
+        let last_d_col = last_col - curr_col;
+        match self[(curr_row, curr_col)] {
+            b'|' | b'-' => (curr_row - last_d_row, curr_col - last_d_col),
+            b'L' | b'7' => (curr_row - last_d_col, curr_col - last_d_row),
+            b'J' | b'F' => (curr_row + last_d_col, curr_col + last_d_row),
+            // (curr_row, curr_col) -> S
+            _ => self
+                .get_s_neighbors((curr_row, curr_col))
+                .find(|&pipe| pipe != (last_row, last_col))
+                .unwrap(),
         }
     }
 }
 
-fn find_first_tile(pos: &(usize, usize), initial_dirs: (i8, i8)) -> (usize, usize) {
-    let (dir_x, dir_y) = if initial_dirs.0 < 0 {initial_dirs} else {(initial_dirs.1, initial_dirs.0)};
-    let dir_x: isize = if dir_x < -1 {-1} else {1};
-    let dir_y: isize = if dir_y > 1 {-1} else {1};
-    let first_tile = ((pos.0 as isize + dir_y) as usize, (pos.1 as isize + dir_x) as usize);
-    first_tile
-}
-fn map(char: char) -> char {
-    match char {
-        '|' => '┃',
-        '-' => '━',
-        'F' => '┏',
-        'L' => '┗',
-        '7' => '┓',
-        'J' => '┛',
-        _ => char
+impl Index<(i16, i16)> for Grid<'_> {
+    type Output = u8;
+
+    fn index(&self, (row, col): (i16, i16)) -> &Self::Output {
+        &self.inner[(row * self.modulo + col) as usize]
     }
 }
-
