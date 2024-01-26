@@ -16,12 +16,15 @@ pub fn main() {
     part1();
     part2();
 }
-fn part1() {
+fn get_input() -> Vec<Vec<char>> {
     let input = include_str!("input");
-    let mut chars = input
+    input
         .lines()
         .map(|str| str.chars().collect::<Vec<char>>())
-        .collect::<Vec<Vec<char>>>();
+        .collect::<Vec<Vec<char>>>()
+}
+fn part1() {
+    let mut chars = get_input();
     let pos = chars.iter().enumerate()
         .map(|(i, arr)| {
             arr.iter()
@@ -43,11 +46,7 @@ fn part1() {
 }
 
 fn part2() {
-    let input = include_str!("input");
-    let mut chars = input
-        .lines()
-        .map(|str| str.chars().collect::<Vec<char>>())
-        .collect::<Vec<Vec<char>>>();
+    let mut chars = get_input();
     let pos = chars.iter().enumerate()
         .map(|(i, arr)| {
             arr.iter()
@@ -69,6 +68,7 @@ fn part2() {
     let inside_points = get_inside_points(twice_area, tiles.len() - 1);
     println!("{}", inside_points);
 }
+
 
 fn get_next_dir(char: char, dir: Dir) -> Dir {
     match char {
