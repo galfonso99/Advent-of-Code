@@ -3,6 +3,10 @@
     clippy::cast_possible_wrap,
     clippy::cast_sign_loss
 )]
+
+/*
+ * This solution is actually from someone else @adriandelgado on github https://github.com/adriandelgado
+ */
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
