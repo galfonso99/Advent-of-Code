@@ -16,8 +16,48 @@ use std::io::prelude::*;
 // For each galaxy pair find the delta of the row plus the delta of the column (absolute value only)
 // Then add all of them together 
 pub fn main () {
-    // part1();
-    part2();
+    part1();
+    // part2();
+}
+
+// From an array where true means empty row transform it into an array with values but every time
+// you encounter a true you add one
+
+fn part1 () {
+    let input = get_input();
+
+    let mut galaxies = vec![];
+    let mut rows = vec![false; input.len()];
+    let mut cols = vec![false; input[0].len()];
+    input.iter().enumerate().for_each(|(i, row)| {
+            (0..input[i].len()).for_each(|j| {
+                    if row[j] != '#' {return;}
+                    rows[i] = true;
+                    cols[j] = true;
+                    galaxies.push((i as isize, j as isize));
+            });
+    });
+    let mut rows_count = 0;
+    let mut cols_count = 0;
+    let mut rows = rows.iter().map(|&occupied| {
+        if !occupied {rows_count += 1;}
+        rows_count
+    }).collect::<Vec<isize>>();
+    let mut cols = cols.iter().map(|&occupied| {
+        if !occupied {cols_count += 1;}
+        cols_count
+    }).collect::<Vec<isize>>();
+    galaxies = galaxies.iter().map(|&(i, j)| (i + rows[i as usize], j + cols[j as usize]))
+                    .collect::<Vec<(isize, isize)>>();
+    let mut sum = 0;
+    for i in 0..galaxies.len() {
+        for j in i+1..galaxies.len() {
+            sum += (galaxies[j].0 - galaxies[i].0).abs() + (galaxies[j].1 - galaxies[i].1).abs();
+        }
+    }
+    // println!("{:?}", rows);
+    // println!("{:?}", cols);
+    println!("{:?}", sum);
 }
 
 fn get_input() -> Vec<Vec<char>> {
@@ -26,25 +66,4 @@ fn get_input() -> Vec<Vec<char>> {
         .lines()
         .map(|str| str.chars().collect::<Vec<char>>())
         .collect::<Vec<Vec<char>>>()
-}
-
-fn part1 () {
-    let file = File::open("input").unwrap();
-    let buf_reader = BufReader::new(file);
-
-    let sum: isize = buf_reader.lines().map(|line| {
-        let string = line.expect("expected");
-        let mut nums = string.split(' ').filter_map(|str| str.parse().ok()).collect::<Vec<isize>>();
-        let mut last_nums = vec![nums[nums.len() - 1]];
-        loop {
-            if nums.iter().all(|&x| x == nums[0]) {
-                break;
-            }
-            nums = nums.windows(2).map(|slc| slc[1] - slc[0]).collect::<Vec<isize>>();
-            last_nums.push(nums[nums.len() - 1]);
-
-        }
-        last_nums.iter().sum::<isize>()
-    }).sum();
-    println!("{}", sum);
 }
