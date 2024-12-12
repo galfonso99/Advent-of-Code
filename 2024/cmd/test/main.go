@@ -49,7 +49,7 @@ func part2() int {
 			fakeCount++
 		}
 	}
-		fmt.Print("Fake Count")
+		fmt.Print("Fake Count ")
 		fmt.Println(fakeCount)
 
 	return safeReports
@@ -71,44 +71,81 @@ func part2() int {
 // Now loop over the changed array again and if all the values are withing the range 1 to 3
 // return true else return false
 
-
 func isSafeWithDampener(arr []int) bool {
-	prev_dir := 0
 	dir := 0
-	fault_count := 0
-	for i := 1; i < len(arr); i++ {
-		diff := arr[i] - arr[i-1]
-		if diff * dir < 0 { 
-			if fault_count > 0 {
-				// fmt.Println(arr)
-				return false
-			} else {
-				fault_count += 1
-				dir = prev_dir
-				arr[i] = arr[i-1]
-				continue
-			}
+	diffs := make([]int, len(arr) - 1)
+	neg_count, pos_count := calculateDirectionCount(arr, diffs)
+	if pos_count < 2 {
+		dir = -1
+	} else if neg_count < 2 {
+		dir = 1
+	} else {
+		return false // Unsalvageable bc too many unsafes
+	}
+	if dir == -1 {       // Flip to positive for unified logic
+		for i:=0; i<len(diffs);i++ {
+			diffs[i] = -diffs[i]
 		}
-		original_val := diff
-		if diff < 0 { diff = -diff }
-		if diff < 1 || diff > 3 {
-			if fault_count > 0 {
-				return false
-			} else {
-				fault_count += 1
-				dir = prev_dir
-				arr[i] = arr[i-1]
-				continue
-			}
-		}
-		prev_dir = dir
-		if original_val > 0 {
-			dir = 1
-		} else {
-			dir = -1
+	}
+	lifelinesUsed := 0 
+	var foundShift bool = findDirectionShiftAndFixIt(diffs)
+	if foundShift { lifelinesUsed += 1 }
+	if lifelinesUsed == 0 && diffs[0] > 3 {
+		diffs[0] = 1
+	} else if lifelinesUsed == 0 {
+		diffs[len(diffs) - 1] = 1
+	}
+	// Check all diff values and make sure they are all positive
+	for i := 0; i < len(diffs); i++ {
+		if diffs[i] < 1 || diffs[i] > 3 { 
+			return false
 		}
 	}
 	return true
+}
+
+func calculateDirectionCount(arr []int, diffs []int) (int, int) {
+	neg_count := 0
+	pos_count := 0
+	for i := 1; i < len(arr); i++ {
+		diffs[i-1] = arr[i] - arr[i-1]
+		if diffs[i-1] < 0 {
+			neg_count++
+		} else if diffs[i-1] > 0 {
+			pos_count++
+		}
+	}
+	return neg_count, pos_count
+}
+
+func findDirectionShiftAndFixIt(diffs []int) bool {
+	for i := 0; i < len(diffs); i++ {
+		if diffs[i] > 0 { 
+			continue 
+		} else {         // Found a negative value which means shift in direction
+			leftWasSafe := i == 0 || ( diffs[i-1] > 0 && diffs[i-1] < 4 )
+			leftCouldBeSafe := i == 0 || ( diffs[i-1] + diffs[i] > 0 && diffs[i-1] + diffs[i] < 4 )
+			rightWasSafe := i == len(diffs) - 1 || ( diffs[i+1] > 0 && diffs[i+1] < 4 )
+			rightCouldBeSafe := i == len(diffs) - 1 || ( diffs[i+1] + diffs[i] > 0 && 
+					diffs[i+1] + diffs[i] < 4 )
+			if !leftWasSafe && leftCouldBeSafe {
+				diffs[i-1] += diffs[i]
+			} else if !rightWasSafe && rightCouldBeSafe {
+				diffs[i+1] += diffs[i]
+			} else if leftWasSafe && leftCouldBeSafe {
+				if i != 0 {
+					diffs[i-1] += diffs[i]
+				}
+			} else {
+				if i != len(diffs) - 1 {
+					diffs[i+1] += diffs[i]
+				}
+			}
+			diffs[i] = 1 
+			return true
+		}
+	}
+	return false
 }
 
 func processInput() [][]int {
