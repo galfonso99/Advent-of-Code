@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	// content, err := os.ReadFile("input/day03.txt")
-	content, err := os.ReadFile("input/test.txt")
+	content, err := os.ReadFile("input/day03.txt")
+	// content, err := os.ReadFile("input/test.txt")
     if err != nil { panic(err) }
 	part2(string(content))
 }
@@ -69,12 +69,6 @@ func part2(str string) {
 		for j := 0; j < 3; j++ {
 			if sequences[j] == len(samples[j]) - 1 && str[i] == samples[j][len(samples[j]) - 1] {
 				sequences[j] = 0
-				// fmt.Printf("A: %d, B: %d\n", a, b)
-				if greenLight {
-					fmt.Printf("greenLight is active\n")
-				} else {
-					fmt.Printf("greenLight is NOT active\n")
-				}
 				if j == 0 && greenLight { sum += a * b }
 				if j == 1 { greenLight = true }
 				if j == 2 { greenLight = false }
@@ -109,12 +103,8 @@ func part2(str string) {
 				sequences[j] = 0
 			}
 		}
-		fmt.Printf("Current index : %d, current char %s, sequence: %d\n", i, string(str[i]), sequences[0])
 		i++
 	}
 	fmt.Println(sum)
 }
-// func part2(nums [][]int) {
-//
-// }
 
