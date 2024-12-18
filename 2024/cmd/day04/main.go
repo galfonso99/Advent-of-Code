@@ -16,12 +16,6 @@ func main() {
 	for i, str := range lines {
 		byteArray[i] = []byte(str)
 	}
-	// for i := range byteArray {
-	// 	for j := range byteArray[i] {
-	// 		fmt.Printf("%s ", string(byteArray[i][j]))
-	// 	}
-	// 	fmt.Println()
-	// }
 	part2(byteArray)
 }
 
