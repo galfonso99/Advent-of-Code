@@ -9,7 +9,7 @@ import (
 
 func main() {
 	ruleMap, updateList := parseInput()
-	part1(ruleMap, updateList)
+	part2(ruleMap, updateList)
 }
 
 func parseInput() ([100][]int, [][]int) {
@@ -70,8 +70,38 @@ func part1(ruleMap [100][]int, updateList [][]int) {
 	fmt.Println(sum)
 }
 
-func part2(arr [][]byte) {
-	
+func part2(ruleMap [100][]int, updateList [][]int) {
+	sum := 0
+	for i, update := range updateList {
+		var pageMap [100]int
+		incorrect := false
+		for j, page := range update {
+			pageMap[page] = j+1
+		}
+		for j := 0; j < len(update); j++ {
+			page := update[j]
+			if ruleMap[page] == nil { continue }
+			for _, secondPage := range ruleMap[page] {
+				if pageMap[secondPage] == 0 { continue }
+				if pageMap[page] > pageMap[secondPage] {
+					// Swapped the values and the indices
+					update[pageMap[page] - 1], update[pageMap[secondPage] - 1] = update[pageMap[secondPage] - 1], update[pageMap[page] - 1]
+					pageMap[page], pageMap[secondPage] = pageMap[secondPage], pageMap[page]
+					// Change the index back to the swapped value that was behind
+					j = pageMap[page] - 1 - 1   // Extra minus 1, accounting for the j++ of the for loop
+					incorrect = true
+					// Now just break because the swap messed everything up
+					break
+				}
+			}
+		}
+		if incorrect {
+			mid := len(updateList[i]) / 2
+			midVal := update[mid]
+			sum += midVal
+		}
+	}
+	fmt.Println(sum)
 }
 
 // For the rules section create a hashmap int to []int using the first value as the key
@@ -84,3 +114,14 @@ func part2(arr [][]byte) {
 // then this update is correct so grab the middle value and add it to the sum. If any
 // of this is not true then the update is not correct so ignore it and move to the next 
 // update
+
+// 86,96,56,92,68
+// 68,96,56,92,86
+// 56,96,68,92,86
+// 56,68,96,92,86
+// 56,68,86,92,96
+//
+// 56|68
+// 68|86
+// 68|96
+// 86|96
