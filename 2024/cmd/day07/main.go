@@ -5,7 +5,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	// "strconv"
 )
 
 func main() {
@@ -33,8 +32,6 @@ func parseInput() ([]int, [][]int) {
 		}
 	}
 	return testVals, nums
-
-
 }
 
 func part1(testVals []int, nums [][]int) {
