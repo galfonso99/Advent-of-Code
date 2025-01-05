@@ -113,6 +113,6 @@ func part2(antennaMap [][]byte) {
 		}
 	}
 	fmt.Println(count)
-	// To get part2 tweat part1 slightly so as to keep finding antinodes until off boundaries
+	// To get part2 tweak part1 slightly so as to keep finding antinodes until off boundaries
 }
 
