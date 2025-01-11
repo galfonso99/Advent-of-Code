@@ -62,7 +62,7 @@ var dirs = [][2]int {{-1,0}, {0,1}, {1,0}, {0,-1}}
 func traverse(topoMap [][]int, found [][]bool, localCount *int, pos [2]int, ind int) {
 	if ind == 9 && !found[pos[0]][pos[1]] { 
 		*localCount += 1 
-		// found[pos[0]][pos[1]] = true
+		found[pos[0]][pos[1]] = true
 		return
 	}
 	for _, dir := range dirs {
