@@ -1,12 +1,13 @@
 const std = @import("std");
+const print = @import("std").debug.print;
 
 const length: i32 = 103;
 const width: i32 = 101;
 const len: usize = 500;
 
 const movement = struct {
-    positions: [500][2]i32,
-    velocities: [500][2]i32
+    positions: [len][2]i32,
+    velocities: [len][2]i32
 };
 
 pub fn main() !void {
@@ -15,7 +16,7 @@ pub fn main() !void {
     const allocator = gpa.allocator();
     
     const struct_of_arrays = try parseFile(allocator);
-    part1(struct_of_arrays);
+    part2(struct_of_arrays);
 }
 
 pub fn parseFile(allocator: std.mem.Allocator) !movement {
@@ -29,26 +30,19 @@ pub fn parseFile(allocator: std.mem.Allocator) !movement {
     var i: usize = 0;
     while (lines.next()) |line| {
         if (line.len == 0) {break;}
-        // Split into position and velocity parts
         var parts = std.mem.splitSequence(u8, line, " ");
         const pos_part = parts.next() orelse return error.InvalidFormat;
         const vel_part = parts.next() orelse return error.InvalidFormat;
-        
-        // Parse position
         var pos = std.mem.splitSequence(u8, pos_part[2..], ","); // Skip "p="
         const pos_x = try std.fmt.parseInt(i32, pos.next() orelse return error.InvalidFormat, 10);
         const pos_y = try std.fmt.parseInt(i32, pos.next() orelse return error.InvalidFormat, 10);
-        
-        // Parse velocity
         var vel = std.mem.splitSequence(u8, vel_part[2..], ","); // Skip "v="
         const vel_x = try std.fmt.parseInt(i32, vel.next() orelse return error.InvalidFormat, 10);
         const vel_y = try std.fmt.parseInt(i32, vel.next() orelse return error.InvalidFormat, 10);
-
         positions[i][0] = pos_x;
         positions[i][1] = pos_y;
         velocities[i][0] = vel_x;
         velocities[i][1] = vel_y;
-
         i += 1;
     }
     return .{.positions = positions, .velocities = velocities };
@@ -96,14 +90,52 @@ fn whichQuadrant(x: i32, y: i32, mid_x: i32, mid_y: i32) usize {
     }
 }
 
-// For each second that passes check if quadrant 1 equals quadrant 2 and quadrant 3 
-// equals quadrant 4
-// If so print which second it occurred at and print the robot map
-// Do this only 3 map prints at a time to not overwhelm the pc and make sure to create some
-// boundary
+// What I did was start from the safety factor from part 1 print every arrangement that
+// had a lower safety factor while making that the new lowest safety factor
+// Then ideally you would end up with the minimum safety factor (aka entropy) when the pattern
+// was formed
 
 fn part2(mov: movement) void {
-    _ = mov;
-    return;
+    var pos = mov.positions;
+    const vel = mov.velocities;
+    var quadrants = [_]i32{0} ** 5;
+    const middle_x = @divTrunc(width, 2);
+    const middle_y = @divTrunc(length, 2);
+    var map: [width][length]u8 = undefined;
+    var lowest: i32 = 218433348;
+    for (0..map.len) |i| {
+        for (0..map[0].len) |j| {
+            map[i][j] = ' ';
+        }
+    }
+    for (1..10000) |j| {
+        quadrants = [_]i32{0} ** 5;
+        for (0..len) |i| {
+            const pos_x = @mod(pos[i][0] + vel[i][0] + width, width);
+            const pos_y = @mod(pos[i][1] + vel[i][1] + length, length);
+            pos[i][0] = pos_x;
+            pos[i][1] = pos_y;
+            const quadrant_index = whichQuadrant(pos_x, pos_y, middle_x, middle_y);
+            quadrants[quadrant_index - 1] += 1;
+        }
+        if (quadrants[0] * quadrants[1] * quadrants[2] * quadrants[3] < lowest) {
+            print("Found a possible one at index {}\n", .{j});
+            lowest = quadrants[0] * quadrants[1] * quadrants[2] * quadrants[3];
+            for (0..len) |x| {
+                map[@intCast(pos[x][0])][@intCast(pos[x][1])] = '.';
+            }
+            print("\n", .{});
+            for (0..map.len) |x| {
+                for (0..map[0].len) |y| {
+                    print("{c}", .{map[x][y]});
+                }
+                print("\n", .{});
+            }
+            for (0..map.len) |x| {
+                for (0..map[0].len) |y| {
+                    map[x][y] = ' ';
+                }
+            }
+        }
+    }
 }
-
